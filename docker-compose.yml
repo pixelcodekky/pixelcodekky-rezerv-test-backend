@@ -1,0 +1,64 @@
+# Own project name so it never touches other "rezerv" stacks on this machine.
+name: rezerv-home
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rezerv
+      MYSQL_USER: rezerv
+      MYSQL_PASSWORD: {MYSQL_PASSWORD}
+    ports:
+      - "${MYSQL_HOST_PORT:-3308}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-urezerv", "-prezerv"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7.4-alpine
+    ports:
+      - "${REDIS_HOST_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  seq:
+    image: datalust/seq:2025.2
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_NOAUTHENTICATION: "true"
+    ports:
+      - "${SEQ_HOST_PORT:-5341}:80"
+    volumes:
+      - seq-data:/data
+
+  api:
+    build: .
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      seq:
+        condition: service_started
+    ports:
+      - "${API_HOST_PORT:-5080}:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=mysql;Port=3306;Database=rezerv;User=rezerv;Password={MYSQL_PASSWORD};"
+      ConnectionStrings__RedisConnection: "redis:6379"
+      Serilog__WriteTo__Seq__Args__serverUrl: "http://seq:80"
+      _2C2P__FrontendReturnUrl: ${TWOC2P_FRONTEND_RETURN_URL:-http://{your-frontend-url}/result/{invoiceNo}}
+      # 2C2P must reach this from the internet: point it at a tunnel (e.g. ngrok http 5080).
+      _2C2P__BackendReturnUrl: ${TWOC2P_BACKEND_RETURN_URL:-https://{your-public-tunnel-domain}/api/payments/2c2p/notification}
+
+volumes:
+  mysql-data:
+  seq-data:

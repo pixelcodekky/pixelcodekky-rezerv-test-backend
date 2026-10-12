@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="claude.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Rezerv.API/Rezerv.API.csproj" />
+    <Project Path="src/Rezerv.Application/Rezerv.Application.csproj" />
+    <Project Path="src/Rezerv.Domain/Rezerv.Domain.csproj" />
+    <Project Path="src/Rezerv.Infrastructure/Rezerv.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Rezerv.Test/Rezerv.Test.csproj" Id="4dc7bbee-0f07-4e80-8571-98045675501f" />
+  </Folder>
+</Solution>
